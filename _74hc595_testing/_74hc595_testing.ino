@@ -7,7 +7,7 @@ int clr = 8;
 char frame[8];
 char frameIdx;
 
-char pinVal = 0x0f;
+char pinVal = 0xc3;
 
 void setup() {
   // put your setup code here, to run once:
@@ -61,9 +61,10 @@ void loop() {
   //displayRow();
   delay(230);
   pinVal ^= 0xff;
-  digitalWrite(latch, LOW);
-  shiftOut(data, clock, LSBFIRST, pinVal);
+  digitalWrite(data, LOW);
   digitalWrite(latch, HIGH);
+  shiftOut(data, clock, LSBFIRST, pinVal);
+  digitalWrite(latch, LOW);
   
 }
 
