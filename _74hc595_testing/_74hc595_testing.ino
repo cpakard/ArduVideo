@@ -1,31 +1,28 @@
-int latch = 7;
-int data = 10;
-int clock = 9;
+int clock = 6;  //PORTD 0b01000000
+int latch = 5;  //PORTD 0b00100000
+int data = 4;   //PORTD 0b00010000
+
+
 int heart = 13;
-int clr = 8;
+
 
 char frame[8];
 char frameIdx;
 
-char pinVal = 0xc3;
+int pinVal = 0x01;
 
 void setup() {
   // put your setup code here, to run once:
-  pinMode(latch, OUTPUT);
-  pinMode(data, OUTPUT);
-  pinMode(clock, OUTPUT);
-  pinMode(heart, OUTPUT);
-  pinMode(clr, OUTPUT);
+  //pinMode(latch, OUTPUT);
+  //pinMode(data, OUTPUT);
+  //pinMode(clock, OUTPUT);
+  //pinMode(heart, OUTPUT);
+  
+  //enable clock, latch, and data pins for output
+  DDRD = DDRD | 0b01110000;
 
   frameIdx = 0;
 
-  /*for (char i = 0; i < 8; i++)
-  {
-    frame[i][0] = 0x01 << i;
-    frame[i][1] = 0x00;
-    frame[i + 8][0] = 0x00;
-    frame[i + 8][1] = 0x01 << i;
-  }*/
   frame[0] = 0b00111100;
   frame[1] = 0b01000010;
   frame[2] = 0b10100101;
@@ -35,80 +32,67 @@ void setup() {
   frame[6] = 0b01000010;
   frame[7] = 0b00111100;
 
-  //PORTD = PORTD & 0b01111111; //clear latch pin
-  //PORTB = PORTB & 0b11111001; //clear the data and clock pins
-  
-  digitalWrite(clr, LOW);
-  digitalWrite(clr, HIGH);
+  PORTD = PORTD & 0b10001111; //clear clock, data, and latch pins
 
-  digitalWrite(latch, LOW);
-  digitalWrite(data, LOW);
-  digitalWrite(clock, LOW);
-  //shiftOut(data, clock, LSBFIRST, 0x0f);
-  //digitalWrite(latch, HIGH);
   //digitalWrite(latch, LOW);
-  //shiftOut(data, clock, LSBFIRST, 0xff);
-  //shiftOut(data, clock, LSBFIRST, 0x00);
-  //for (char i = 0; i < 8; i++)
-  //{
-  //  digitalWrite(latch, HIGH);
-    //digitalWrite(latch, LOW);
-  //  delay(500);
-  //}
+  //digitalWrite(data, LOW);
+  //digitalWrite(clock, LOW);
+
 }
 
-void loop() {
-  //displayRow();
-  delay(230);
-  pinVal ^= 0xff;
-  digitalWrite(data, LOW);
-  digitalWrite(latch, HIGH);
-  shiftOut(data, clock, LSBFIRST, pinVal);
-  digitalWrite(latch, LOW);
-  
-}
-
-void displayRow()
+void loop() 
 {
-  if (frameIdx >= 8)
+  displayRow(frameIdx);
+  delay(2);
+  if(++frameIdx > 7)
   {
     frameIdx = 0;
   }
 
-  //shift out rows byte
-  char rowByte = 0x01 << frameIdx;
-  for (char i = 0; i < 8; ++i)
-  {
-    //set data pin
-    PORTB = (PORTB | 0b00000100) & (((0x00 >> i) & 0x01) << 2);
-    //set clock pin
-    PORTB = PORTB | 0b00000010;
-    //reset clock pin
-    PORTB = PORTB & 0b11111101;
-  }
+  //The following code controls 16 leds on two shift registers
+  // flashing them all, one by one, in order
+  /*pinVal = pinVal << 1;
+   if(pinVal == 0)
+   pinVal = 0x01;
+   digitalWrite(data, LOW);
+   digitalWrite(latch, LOW);
+   char highVal = (pinVal >> 8) & 0xff;
+   char lowVal = pinVal & 0xff;
+   shiftOut(data, clock, LSBFIRST, lowVal);
+   shiftOut(data, clock, LSBFIRST, highVal);
+   digitalWrite(latch, HIGH);
+   */
+}
 
-  //shift out columns byte
-  for (char i = 0; i < 8; ++i)
-  {
-    //set data pin
-    //PORTB = (PORTB | 0b00000100) & (((frame[frameIdx] >> i) & 0x01) << 2);
-    PORTB = (PORTB | 0b00000100) & (((rowByte >> i) & 0x01) << 2);
-    //set clock pin
-    PORTB = PORTB | 0b00000010;
-    //reset clock pin
-    PORTB = PORTB & 0b11111101;
-  }
-
-  //set latch pin
-  PORTD = PORTD | 0b10000000;
+void displayRow(char rowIdx)
+{
   //clear latch pin
-  PORTD = PORTD & 0b01111111;
+  PORTD = PORTD & 0b11011111;
+  
+  //shift out col byte
+  shiftByte(frame[rowIdx]);
 
-  ++frameIdx;
+  //shift out row byte
+  shiftByte(~(0x01 << (7-rowIdx)));
+  
+  //set latch pin
+  PORTD = PORTD | 0b00100000;
+  //delay(200);
 }
 
 void shiftByte(char val)
 {
-
+  for(char i=0; i<8; ++i)
+  {
+    //clear clock pin
+    PORTD = PORTD & 0b10111111;
+    //set data pin
+    PORTD = (PORTD & 0b11101111) | (((val >> i) & 0x01) << 4);
+    //set clock pin
+    PORTD = PORTD | 0b01000000;
+    //reset clock pin
+    PORTD = PORTD & 0b10111111;
+  }
 }
+
 
