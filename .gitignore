@@ -1,0 +1,5 @@
+ 
+testing/Windows/ArduVideo_Testing/Debug/*
+testing/Windows/ArduVideo_Testing/ArduVideo_Testing/Debug/*
+*.exe
+*.opensdf

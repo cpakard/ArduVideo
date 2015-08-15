@@ -9,6 +9,7 @@
 #define COMMMANAGER_H_
 
 //#include <Arduino.h>
+#include "FrameManager.h"
 
 enum CommStates
 {
@@ -21,8 +22,11 @@ enum CommStates
 class CommManagerClass
 {
 	public:
-		CommManagerClass();
+		CommManagerClass(FrameManagerClass *fm);
 		virtual ~CommManagerClass();
+
+		virtual void commTask();
+
 		virtual char *getBuffer();
 		virtual bool bufferByte(char byte);
 		virtual char getFrameByte();
@@ -31,6 +35,8 @@ class CommManagerClass
 	protected:
 
 	private:
+		FrameManagerClass *frameManager;
+
 		CommStates CommState;
 		char buffer[3];
 		char bufferIdx;
